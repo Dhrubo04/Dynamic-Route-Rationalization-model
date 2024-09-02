@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Route Rationalization Model</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCef4JZM3CUgu7-KcRyYl4aWsqq2kRbgKU&libraries=places,visualization&callback=initMap" async defer></script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <input id="start" type="text" placeholder="Enter starting point">
+        <input id="end" type="text" placeholder="Enter ending point">
+        <button onclick="calculateRoutes()">Get Routes</button>
+        <button onclick="resetMap()">Reset Map</button>
+        <button onclick="refreshStatus()">Refresh Status</button>
+        <select id="mapType" onchange="changeMapType()">
+            <option value="roadmap">Roadmap</option>
+            <option value="satellite">Satellite</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="terrain">Terrain</option>
+        </select>
+        <button onclick="toggleTrafficLayer()">Toggle Traffic Layer</button>
+        <div id="routeList"></div>
+    </div>
+    <div class="map-control">
+        <button onclick="zoomIn()">Zoom In</button>
+        <button onclick="zoomOut()">Zoom Out</button>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
