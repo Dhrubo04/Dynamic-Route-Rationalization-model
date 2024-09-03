@@ -11,7 +11,21 @@ let currentRoutes = [];
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 12.9716, lng: 77.5946 }, // Default center (Bengaluru, India)
-        zoom: 12
+        zoom: 12,
+        styles: [
+            { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+            { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
+            { featureType: 'administrative.land_parcel', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
+            { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+            { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+            { featureType: 'road.arterial', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+            { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#f8cdd6' }] },
+            { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+            { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e3f2fd' }] }
+        ]
     });
 
     directionsService = new google.maps.DirectionsService();
@@ -76,64 +90,53 @@ function displayRoutes(result) {
         icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
     }));
 
-    const routeRequests = routes.map((route, index) => ({
-        routeIndex: index,
-        distance: route.legs[0].distance.value,
-        duration: route.legs[0].duration.value,
-        duration_in_traffic: route.legs[0].duration_in_traffic ? route.legs[0].duration_in_traffic.value : route.legs[0].duration.value
-    }));
+    routes.sort((a, b) => a.legs[0].duration.value - b.legs[0].duration.value);
 
-    fetch('/api/get_routes', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ routes: routeRequests })
-    })
-    .then(response => response.json())
-    .then(data => {
-        data.forEach((route, index) => {
-            const routeInfo = document.createElement('div');
-            const routeDistance = (route.distance / 1000).toFixed(2) + ' km'; // Convert to km
-            const routeDuration = (route.duration / 60).toFixed(2) + ' min'; // Convert to min
-            const trafficCondition = route.predicted_congestion ? 'Congested' : 'Clear';
+    routes.forEach((route, index) => {
+        const routeInfo = document.createElement('div');
+        const routeDistance = route.legs[0].distance.text;
+        const routeDuration = route.legs[0].duration.text;
+        const trafficCondition = 'Fetching...'; 
 
-            routeInfo.className = 'route-info';
-            routeInfo.innerHTML = `
-                <h3>Route ${index + 1} ${index === 0 ? '(Optimal)' : ''}</h3>
-                <p>Distance: ${routeDistance}</p>
-                <p>Duration: ${routeDuration}</p>
-                <p>Traffic Condition: ${trafficCondition}</p>
-            `;
+        const optimalRoute = callAIModel(route);
 
-            routeInfo.addEventListener('click', () => {
-                routeInfo.classList.toggle('active');
-                if (routeInfo.classList.contains('active')) {
-                    displayRoute(index);
-                } else {
-                    polylines[index].setMap(null);
-                }
-            });
+        routeInfo.className = 'route-info';
+        routeInfo.innerHTML = `
+          <h3>Route ${index + 1} ${optimalRoute ? '<span style="color: #28a745;">(Optimal)</span>' : ''}</h3>
+          <p>Distance: ${routeDistance}</p>
+          <p>Duration: ${routeDuration}</p>
+          <p>Traffic Condition: ${trafficCondition}</p>
+        `;
 
-            routeList.appendChild(routeInfo);
-            displayRoute(index);
+        routeInfo.addEventListener('click', () => {
+            showRoute(index);
         });
-    })
-    .catch(error => console.error('Error fetching data:', error));
-}
 
-function displayRoute(index) {
-    const route = directionsRenderer.getDirections().routes[index];
-    const polyline = new google.maps.Polyline({
-        path: route.overview_path,
-        geodesic: true,
-        strokeColor: index === 0 ? '#FF0000' : '#0000FF',
-        strokeOpacity: 1.0,
-        strokeWeight: 3
+        routeList.appendChild(routeInfo);
+
+        
+        const polyline = new google.maps.Polyline({
+            path: route.overview_path,
+            strokeColor: getRouteColor(index),
+            strokeOpacity: 0.7,
+            strokeWeight: 5
+        });
+        polyline.setMap(map);
+        polylines.push(polyline);
     });
 
-    polyline.setMap(map);
-    polylines[index] = polyline;
+    const bounds = new google.maps.LatLngBounds();
+    routes.forEach(route => {
+        route.overview_path.forEach(point => {
+            bounds.extend(point);
+        });
+    });
+    map.fitBounds(bounds);
+}
+
+function showRoute(routeIndex) {
+    polylines.forEach(polyline => polyline.setMap(null));
+    polylines[routeIndex].setMap(map);
 }
 
 function resetMap() {
@@ -166,11 +169,18 @@ function toggleTrafficLayer() {
 }
 
 function zoomIn() {
-    const currentZoom = map.getZoom();
-    map.setZoom(currentZoom + 1);
+    map.setZoom(map.getZoom() + 1);
 }
 
 function zoomOut() {
-    const currentZoom = map.getZoom();
-    map.setZoom(currentZoom - 1);
+    map.setZoom(map.getZoom() - 1);
+}
+
+function getRouteColor(index) {
+    const colors = ['#FF0000', '#00FF00', '#0000FF'];
+    return colors[index % colors.length];
+}
+
+function callAIModel(route) {
+    return Math.random() > 0.5;
 }
