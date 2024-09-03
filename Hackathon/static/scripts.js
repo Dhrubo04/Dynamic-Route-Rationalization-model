@@ -10,7 +10,7 @@ let currentRoutes = [];
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 12.9716, lng: 77.5946 }, // Default center (Bengaluru, India)
+        center: { lat: 22.5744, lng: 88.3629 }, // Default center KOLKATA
         zoom: 12,
         styles: [
             { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
