@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
     height: 100vh;
     overflow: hidden;
 }
@@ -13,26 +13,26 @@ body {
 
 #controls {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    background: white;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    top: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1;
-    width: 300px;
-    max-height: 100%;
+    width: 320px;
+    max-height: calc(100% - 40px);
     overflow-y: auto;
 }
 
 #controls input, #controls button, #controls select {
     display: block;
-    width: 100%;
-    margin: 5px 0;
-    padding: 10px;
+    width: calc(100% - 20px);
+    margin: 10px 0;
+    padding: 12px;
     font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
 }
 
 #controls button {
@@ -40,6 +40,7 @@ body {
     color: #fff;
     border: none;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 #controls button:hover {
@@ -47,28 +48,42 @@ body {
 }
 
 #routeList {
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 .route-info {
     margin-bottom: 10px;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .route-info.active {
-    background-color: #e9ecef;
+    background-color: #f0f0f0;
 }
 
 .map-control {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: white;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1;
+}
+
+.map-control button {
+    background: #28a745;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background-color 0.3s;
+}
+
+.map-control button:hover {
+    background: #218838;
 }
