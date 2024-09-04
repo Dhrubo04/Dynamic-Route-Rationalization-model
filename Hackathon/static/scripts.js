@@ -51,7 +51,11 @@ function calculateRoutes() {
         origin: start,
         destination: end,
         travelMode: google.maps.TravelMode.DRIVING,
-        provideRouteAlternatives: true
+        provideRouteAlternatives: true,
+        drivingOptions: {
+            departureTime: new Date(),  // Specifies the desired time of departure.
+            trafficModel: 'bestguess'   // Other options: 'optimistic', 'pessimistic'
+        }
     };
 
     directionsService.route(request, function(result, status) {
@@ -96,7 +100,7 @@ function displayRoutes(result) {
         const routeInfo = document.createElement('div');
         const routeDistance = route.legs[0].distance.text;
         const routeDuration = route.legs[0].duration.text;
-        const trafficCondition = 'Fetching...'; 
+        const trafficCondition = getTrafficLevel(route); 
 
         const optimalRoute = callAIModel(route);
 
@@ -105,7 +109,7 @@ function displayRoutes(result) {
           <h3>Route ${index + 1} ${optimalRoute ? '<span style="color: #28a745;">(Optimal)</span>' : ''}</h3>
           <p>Distance: ${routeDistance}</p>
           <p>Duration: ${routeDuration}</p>
-          <p>Traffic Condition: ${trafficCondition}</p>
+          <p>Traffic Condition: ${trafficCondition}/10</p>
         `;
 
         routeInfo.addEventListener('click', () => {
@@ -114,7 +118,6 @@ function displayRoutes(result) {
 
         routeList.appendChild(routeInfo);
 
-        
         const polyline = new google.maps.Polyline({
             path: route.overview_path,
             strokeColor: getRouteColor(index),
@@ -134,6 +137,18 @@ function displayRoutes(result) {
     map.fitBounds(bounds);
 }
 
+function getTrafficLevel(route) {
+    const durationInTraffic = route.legs[0].duration_in_traffic.value;
+    const regularDuration = route.legs[0].duration.value;
+
+    const trafficRatio = durationInTraffic / regularDuration;
+
+    let trafficLevel = Math.floor((trafficRatio - 1) * 10);
+    trafficLevel = Math.min(Math.max(trafficLevel, 1), 10); // Ensuring the level is between 1 and 10
+
+    return trafficLevel;
+}
+
 function showRoute(routeIndex) {
     polylines.forEach(polyline => polyline.setMap(null));
     polylines[routeIndex].setMap(map);
@@ -147,7 +162,7 @@ function resetMap() {
     markers = [];
     polylines.forEach(polyline => polyline.setMap(null));
     polylines = [];
-    map.setCenter({ lat: 12.9716, lng: 77.5946 });
+    map.setCenter({ lat: 22.5744, lng: 88.3629 });
     map.setZoom(12);
 }
 
