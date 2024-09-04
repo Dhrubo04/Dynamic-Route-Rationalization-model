@@ -6,7 +6,8 @@ let autocompleteStart;
 let autocompleteEnd;
 let markers = [];
 let polylines = [];
-let currentRoutes = [];
+let busMarkers = [];
+let geocoder;
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -36,7 +37,37 @@ function initMap() {
 
     autocompleteStart = new google.maps.places.Autocomplete(document.getElementById('start'));
     autocompleteEnd = new google.maps.places.Autocomplete(document.getElementById('end'));
+
+    geocoder = new google.maps.Geocoder();
+
+    addBusMarkers([
+        "Acropolis Mall, Kolkata",
+        "Kasba, Kolkata",
+        "Salt Lake, Kolkata",
+        "Park Street, Kolkata",
+        "Garia, Kolkata"
+    ]);
+    
 }
+
+function addBusMarkers(locations) {
+    locations.forEach(location => {
+        geocoder.geocode({ address: location }, function(results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                const marker = new google.maps.Marker({
+                    position: results[0].geometry.location,
+                    map: map,
+                    title: location,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/bus.png' // Use a bus icon
+                });
+                busMarkers.push(marker);
+            } else {
+                console.error('Geocode was not successful for the following reason: ' + status);
+            }
+        });
+    });
+}
+
 
 function calculateRoutes() {
     const start = document.getElementById('start').value;
@@ -113,7 +144,7 @@ function displayRoutes(result) {
         const routeInfo = document.createElement('div');
         const routeDistance = route.legs[0].distance.text;
         const routeDuration = route.legs[0].duration.text;
-        const trafficCondition = getTrafficLevel(route); 
+        const trafficCondition = getTrafficLevel(route);
 
         routeInfo.className = 'route-info';
         routeInfo.innerHTML = `
@@ -148,7 +179,6 @@ function displayRoutes(result) {
     map.fitBounds(bounds);
 }
 
-
 function getTrafficLevel(route) {
     const durationInTraffic = route.legs[0].duration_in_traffic.value;
     const regularDuration = route.legs[0].duration.value;
@@ -174,8 +204,19 @@ function resetMap() {
     markers = [];
     polylines.forEach(polyline => polyline.setMap(null));
     polylines = [];
+    busMarkers.forEach(marker => marker.setMap(null));
+    busMarkers = [];
     map.setCenter({ lat: 22.5744, lng: 88.3629 });
     map.setZoom(12);
+
+    // Re-add bus markers after reset
+    addBusMarkers([
+        "Jadavpur, Kolkata",
+        "Ruby General Hospital, Kolkata",
+        "Kalikapur, Kolkata",
+        "Sahid Nagar, Kolkata",
+        "Garia, Kolkata"
+    ]);
 }
 
 function refreshStatus() {
@@ -209,5 +250,5 @@ function getRouteColor(index) {
 }
 
 function callAIModel(route) {
-    return Math.random() > 0.5;
+    return Math.random() > 0.5 ? 'Yes' : 'No';
 }
