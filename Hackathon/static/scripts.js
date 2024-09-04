@@ -41,30 +41,24 @@ function initMap() {
     geocoder = new google.maps.Geocoder();
 
     addBusMarkers([
-        "Acropolis Mall, Kolkata",
-        "Kasba, Kolkata",
-        "Salt Lake, Kolkata",
-        "Park Street, Kolkata",
-        "Garia, Kolkata"
+        { lat: 22.5162, lng: 88.4051 }, // Acropolis Mall
+        { lat: 22.5245, lng: 88.3874 }, // Kasba
+        { lat: 22.5867, lng: 88.4178 }, // Salt Lake
+        { lat: 22.5536, lng: 88.3492 }, // Park Street
+        { lat: 22.4666, lng: 88.3604 }  // Garia
     ]);
     
 }
 
 function addBusMarkers(locations) {
     locations.forEach(location => {
-        geocoder.geocode({ address: location }, function(results, status) {
-            if (status === google.maps.GeocoderStatus.OK) {
-                const marker = new google.maps.Marker({
-                    position: results[0].geometry.location,
-                    map: map,
-                    title: location,
-                    icon: 'http://maps.google.com/mapfiles/ms/icons/bus.png' // Use a bus icon
-                });
-                busMarkers.push(marker);
-            } else {
-                console.error('Geocode was not successful for the following reason: ' + status);
-            }
+        const marker = new google.maps.Marker({
+            position: location,
+            map: map,
+            title: `Bus Stop`,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/bus.png' // Use a bus icon
         });
+        busMarkers.push(marker);
     });
 }
 
@@ -211,11 +205,11 @@ function resetMap() {
 
     // Re-add bus markers after reset
     addBusMarkers([
-        "Jadavpur, Kolkata",
-        "Ruby General Hospital, Kolkata",
-        "Kalikapur, Kolkata",
-        "Sahid Nagar, Kolkata",
-        "Garia, Kolkata"
+        { lat: 22.5151, lng: 88.3931 }, // Acropolis Mall
+        { lat: 22.5142, lng: 88.3981 }, // GST Bhavan
+        { lat: 22.5198, lng: 88.3821 }, // KASBA
+        { lat: 22.5536, lng: 88.3492 }, // Park Street
+        { lat: 22.4666, lng: 88.3604 }  // Garia
     ]);
 }
 
@@ -245,10 +239,10 @@ function zoomOut() {
 }
 
 function getRouteColor(index) {
-    const colors = ['#FF0000', '#00FF00', '#0000FF'];
-    return colors[index % colors.length];
-}
-
-function callAIModel(route) {
-    return Math.random() > 0.5 ? 'Yes' : 'No';
+    switch (index) {
+        case 0: return '#28a745'; // Green for the optimal route
+        case 1: return '#ffc107'; // Yellow for the medium traffic route
+        case 2: return '#dc3545'; // Red for the high traffic route
+        default: return '#007bff'; // Blue for any other routes
+    }
 }
