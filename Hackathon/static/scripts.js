@@ -40,13 +40,7 @@ function initMap() {
 
     geocoder = new google.maps.Geocoder();
 
-    addBusMarkers([
-        { lat: 22.5162, lng: 88.4051 }, // Acropolis Mall
-        { lat: 22.5245, lng: 88.3874 }, // Kasba
-        { lat: 22.5867, lng: 88.4178 }, // Salt Lake
-        { lat: 22.5536, lng: 88.3492 }, // Park Street
-        { lat: 22.4666, lng: 88.3604 }  // Garia
-    ]);
+    addBusMarkers(busMarkersData);
     
 }
 
