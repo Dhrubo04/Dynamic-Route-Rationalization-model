@@ -1,89 +1,76 @@
 body {
+    font-family: Arial, sans-serif;
     margin: 0;
-    font-family: 'Roboto', sans-serif;
-    height: 100vh;
-    overflow: hidden;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#start, #end {
+    width: 250px;
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
 }
 
 #map {
-    height: 100%;
     width: 100%;
-    position: absolute;
+    height: 500px;
+    margin-bottom: 20px;
 }
 
 #controls {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    width: 320px;
-    max-height: calc(100% - 40px);
-    overflow-y: auto;
-}
-
-#controls input, #controls button, #controls select {
-    display: block;
-    width: calc(100% - 20px);
-    margin: 10px 0;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-}
-
-#controls button {
-    background: #007bff;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#controls button:hover {
-    background: #0056b3;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
 #routeList {
-    margin-top: 15px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
 .route-info {
-    margin-bottom: 10px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-.route-info.active {
-    background-color: #f0f0f0;
-}
-
-.map-control {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-}
-
-.map-control button {
-    background: #28a745;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 10px;
-    transition: background-color 0.3s;
-}
-
-.map-control button:hover {
-    background: #218838;
+.route-info:hover {
+    background-color: #dae0e5;
 }
