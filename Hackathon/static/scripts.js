@@ -94,7 +94,20 @@ function displayRoutes(result) {
         icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
     }));
 
-    routes.sort((a, b) => a.legs[0].duration.value - b.legs[0].duration.value);
+    // Sort routes first by distance and then by traffic level
+    routes.sort((a, b) => {
+        const distanceA = a.legs[0].distance.value;
+        const distanceB = b.legs[0].distance.value;
+        const trafficLevelA = getTrafficLevel(a);
+        const trafficLevelB = getTrafficLevel(b);
+
+        if (distanceA === distanceB) {
+            return trafficLevelA - trafficLevelB;
+        }
+        return distanceA - distanceB;
+    });
+
+    let optimalRouteIndex = 0;
 
     routes.forEach((route, index) => {
         const routeInfo = document.createElement('div');
@@ -102,11 +115,9 @@ function displayRoutes(result) {
         const routeDuration = route.legs[0].duration.text;
         const trafficCondition = getTrafficLevel(route); 
 
-        const optimalRoute = callAIModel(route);
-
         routeInfo.className = 'route-info';
         routeInfo.innerHTML = `
-          <h3>Route ${index + 1} ${optimalRoute ? '<span style="color: #28a745;">(Optimal)</span>' : ''}</h3>
+          <h3>Route ${index + 1} ${index === optimalRouteIndex ? '<span style="color: #28a745;">(Optimal)</span>' : ''}</h3>
           <p>Distance: ${routeDistance}</p>
           <p>Duration: ${routeDuration}</p>
           <p>Traffic Condition: ${trafficCondition}/10</p>
@@ -136,6 +147,7 @@ function displayRoutes(result) {
     });
     map.fitBounds(bounds);
 }
+
 
 function getTrafficLevel(route) {
     const durationInTraffic = route.legs[0].duration_in_traffic.value;
