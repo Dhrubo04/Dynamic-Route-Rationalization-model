@@ -11,7 +11,7 @@ let geocoder;
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 22.5744, lng: 88.3629 }, // Default center KOLKATA
+        center: { lat: 22.5744, lng: 88.3629 }, // Default center Kolkata
         zoom: 12,
         styles: [
             { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
@@ -40,8 +40,7 @@ function initMap() {
 
     geocoder = new google.maps.Geocoder();
 
-    addBusMarkers(busMarkersData);
-    
+    addBusMarkers(busMarkers);
 }
 
 function addBusMarkers(locations) {
@@ -49,13 +48,12 @@ function addBusMarkers(locations) {
         const marker = new google.maps.Marker({
             position: location,
             map: map,
-            title: `Bus Stop`,
+            title: 'Bus Stop',
             icon: 'http://maps.google.com/mapfiles/ms/icons/bus.png' // Use a bus icon
         });
         busMarkers.push(marker);
     });
 }
-
 
 function calculateRoutes() {
     const start = document.getElementById('start').value;
@@ -113,7 +111,6 @@ function displayRoutes(result) {
         icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
     }));
 
-    // Sort routes first by distance and then by traffic level
     routes.sort((a, b) => {
         const distanceA = a.legs[0].distance.value;
         const distanceB = b.legs[0].distance.value;
@@ -134,12 +131,18 @@ function displayRoutes(result) {
         const routeDuration = route.legs[0].duration.text;
         const trafficCondition = getTrafficLevel(route);
 
+        //
+        fetchPredictedDuration(route, index, routeInfo);
+        //
+
+        //
         routeInfo.className = 'route-info';
         routeInfo.innerHTML = `
           <h3>Route ${index + 1} ${index === optimalRouteIndex ? '<span style="color: #28a745;">(Optimal)</span>' : ''}</h3>
           <p>Distance: ${routeDistance}</p>
           <p>Duration: ${routeDuration}</p>
           <p>Traffic Condition: ${trafficCondition}/10</p>
+          <p id="predictedDuration-${index}">Predicted Duration:</p>
         `;
 
         routeInfo.addEventListener('click', () => {
@@ -167,17 +170,102 @@ function displayRoutes(result) {
     map.fitBounds(bounds);
 }
 
+function fetchPredictedDuration(route, index, routeInfo) {
+    const currentTime = new Date();
+    const hour = currentTime.getHours();
+    const dayOfWeek = currentTime.getDay();
+
+    fetch('/api/get_predicted_duration', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            hour: hour,
+            day_of_week: dayOfWeek, // Include day of the week
+            distance: route.legs[0].distance.value,
+            duration_in_traffic: route.legs[0].duration_in_traffic ? route.legs[0].duration_in_traffic.value : route.legs[0].duration.value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const predictedDuration = data.predicted_duration;
+        const predictedDurationElement = routeInfo.querySelector(`#predictedDuration-${index}`);
+        if (predictedDurationElement) {
+            predictedDurationElement.innerText = `Predicted Duration: ${formatDuration(predictedDuration)}`;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching predicted duration:', error);
+    });
+}
+function formatDuration(durationInSeconds) {
+    const hours = Math.floor(durationInSeconds / 3600);
+    const minutes = Math.floor((durationInSeconds % 3600) / 60);
+    const seconds = durationInSeconds % 60;
+    return `${hours}h ${minutes}m ${seconds}s`;
+}
+function calculateRouteAndTrafficLevel(origin, destination, apiKey) {
+
+    const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&departure_time=now&key=${apiKey}`;
+
+    // Fetch the route data with traffic information
+    fetch(directionsUrl)
+        .then(response => response.json())
+        .then(data => {
+            const route = data.routes[0];  // Get the first route
+            const trafficLevel = getTrafficLevel(route);
+            console.log(`Traffic level: ${trafficLevel}/10`);
+        })
+        .catch(error => {
+            console.error('Error fetching directions:', error);
+        });
+}
+
+
+// function getTrafficLevel(route) {
+//     const durationInTraffic = route.legs[0].duration_in_traffic ? route.legs[0].duration_in_traffic.value : route.legs[0].duration.value;
+//     const regularDuration = route.legs[0].duration.value;
+
+//     // Calculate traffic ratio
+//     const trafficRatio = durationInTraffic / regularDuration;
+
+//     // If there's no significant traffic, keep a lower bound on traffic level
+//     let trafficLevel = Math.round((trafficRatio - 1) * 10);
+
+//     // Ensure trafficLevel is between 1 and 10
+//     trafficLevel = Math.min(Math.max(trafficLevel, 1), 10); 
+
+//     return trafficLevel;
+// }
 function getTrafficLevel(route) {
-    const durationInTraffic = route.legs[0].duration_in_traffic.value;
+    // Use duration_in_traffic if available, otherwise fall back to duration
+    const durationInTraffic = route.legs[0].duration_in_traffic ? route.legs[0].duration_in_traffic.value : route.legs[0].duration.value;
     const regularDuration = route.legs[0].duration.value;
 
+    // Calculation
     const trafficRatio = durationInTraffic / regularDuration;
 
-    let trafficLevel = Math.floor((trafficRatio - 1) * 10);
-    trafficLevel = Math.min(Math.max(trafficLevel, 1), 10); // Ensuring the level is between 1 and 10
+    
+    let trafficLevel;
+
+    if (trafficRatio <= 1.1) {
+        trafficLevel = 1; // Very light traffic
+    } else if (trafficRatio <= 1.25) {
+        trafficLevel = 3; // Light traffic
+    } else if (trafficRatio <= 1.5) {
+        trafficLevel = 5; // Moderate traffic
+    } else if (trafficRatio <= 1.75) {
+        trafficLevel = 7; // Heavy traffic
+    } else {
+        trafficLevel = 10; // Severe traffic
+    }
 
     return trafficLevel;
 }
+
+
+
 
 function showRoute(routeIndex) {
     polylines.forEach(polyline => polyline.setMap(null));
@@ -197,14 +285,7 @@ function resetMap() {
     map.setCenter({ lat: 22.5744, lng: 88.3629 });
     map.setZoom(12);
 
-    // Re-add bus markers after reset
-    addBusMarkers([
-        { lat: 22.5151, lng: 88.3931 }, // Acropolis Mall
-        { lat: 22.5142, lng: 88.3981 }, // GST Bhavan
-        { lat: 22.5198, lng: 88.3821 }, // KASBA
-        { lat: 22.5536, lng: 88.3492 }, // Park Street
-        { lat: 22.4666, lng: 88.3604 }  // Garia
-    ]);
+    addBusMarkers(busMarkersData);
 }
 
 function refreshStatus() {
@@ -240,3 +321,35 @@ function getRouteColor(index) {
         default: return '#007bff'; // Blue for any other routes
     }
 }
+////////
+function calculateRoutes() {
+    const start = document.getElementById('start').value;
+    const end = document.getElementById('end').value;
+
+    if (!start || !end) {
+        alert('Please enter both start and end locations');
+        return;
+    }
+
+    const request = {
+        origin: start,
+        destination: end,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: true,
+        drivingOptions: {
+            departureTime: new Date(),
+            trafficModel: 'bestguess'
+        }
+    };
+
+    directionsService.route(request, function(result, status) {
+        if (status === google.maps.DirectionsStatus.OK) {
+            displayRoutes(result);
+        } else {
+            alert('Failed to get routes: ' + status);
+        }
+    });
+}
+
+
+
