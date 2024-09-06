@@ -141,12 +141,13 @@ function displayRoutes(result) {
           <h3>Route ${index + 1} ${index === optimalRouteIndex ? '<span style="color: #28a745;">(Optimal)</span>' : ''}</h3>
           <p>Distance: ${routeDistance}</p>
           <p>Duration: ${routeDuration}</p>
-          <p>Traffic Condition: ${trafficCondition}/10</p>
-          <p id="predictedDuration-${index}">Predicted Duration:</p>
+           <p>Traffic Condition: ${trafficCondition}/10</p> 
+           <p>Predicted Duration: <span id="predictedDurationValue-${index}"></span><//p>
         `;
 
         routeInfo.addEventListener('click', () => {
-            showRoute(index);
+            showRoute(index);document.querySelector('#routesContainer').appendChild(routeInfo);
+
         });
 
         routeList.appendChild(routeInfo);
@@ -176,29 +177,32 @@ function fetchPredictedDuration(route, index, routeInfo) {
     const dayOfWeek = currentTime.getDay();
 
     fetch('/api/get_predicted_duration', {
-        method: 'POST',
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             hour: hour,
-            day_of_week: dayOfWeek, // Include day of the week
+            day_of_week: dayOfWeek,
             distance: route.legs[0].distance.value,
             duration_in_traffic: route.legs[0].duration_in_traffic ? route.legs[0].duration_in_traffic.value : route.legs[0].duration.value
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        const predictedDuration = data.predicted_duration;
-        const predictedDurationElement = routeInfo.querySelector(`#predictedDuration-${index}`);
-        if (predictedDurationElement) {
-            predictedDurationElement.innerText = `Predicted Duration: ${formatDuration(predictedDuration)}`;
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        return response.json(); // Proceed to parse only if the response is OK
+    })
+    .then(data => {
+        console.log(data); // Proceed with your logic here
     })
     .catch(error => {
         console.error('Error fetching predicted duration:', error);
     });
+    
 }
+
 function formatDuration(durationInSeconds) {
     const hours = Math.floor(durationInSeconds / 3600);
     const minutes = Math.floor((durationInSeconds % 3600) / 60);
